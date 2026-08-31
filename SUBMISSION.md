@@ -8,7 +8,7 @@
 
 **Repo / archive:**
 
-`[FILL IN — link to your Git repo, or note that you're sending a zip attachment]`
+https://github.com/lunistache/mincaai-swe-test
 
 **One command a reviewer can copy-paste to reproduce your score:**
 
