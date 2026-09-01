@@ -10,6 +10,10 @@
 
 https://github.com/lunistache/mincaai-swe-test
 
+**Live interactive write-up (optional, not a required deliverable):**
+
+https://lunistache.github.io/mincaai-swe-test/ — a companion page (source in `docs/index.html`, hosted via GitHub Pages) walking through the utility table, the fix log with before/after numbers per change, and a working copy of the scoring formula to try directly. Everything on it is pulled from `MEASUREMENTS.md`; it adds nothing not already in the required documents.
+
 **One command a reviewer can copy-paste to reproduce your score:**
 
 ```
@@ -124,7 +128,11 @@ the labelled corpus, implementing fixes, and running the scorer after every chan
 | 12 | Claude Code | "Run the resilience, determinism, throughput, and robustness checks — the axes the scorer can't show locally." | Reviewed each result before accepting: a hostile 65%-failure LLM client across 5 seeds (still +1.0000 — confirmed this isn't luck, it's because the LLM is only used for header mapping with a real fallback), a determinism check (ran twice, diffed, identical), synthetic 40k-row files to test call-count scaling (1 call/section, not per row), and a robustness pass that caught a real bug — a truncated `.xlsx` crashed with an unhandled exception on the API path. Had that fixed and reverified. Also had it measure (not guess) memory usage and apply a cheap, low-risk win (`read_only=True` for Excel files) rather than attempt a full streaming rewrite under time pressure. |
 | 13 | Claude Code | "Explain every change you made, in detail, for someone with little experience." | Used this as a correctness check on my own understanding before writing this submission — walked through the explanation against the actual diff to confirm nothing was glossed over or misrepresented. |
 | 14 | Claude Code | "Explain how I can run and check the score myself, step by step." | Used the resulting instructions to independently verify the score on my own machine before trusting it enough to write it into this document. |
-| 15 | Claude Code | "Fill in `SUBMISSION.md` — including this AI usage log — from what we actually did this session." | Reviewing this document now; will edit anything that doesn't accurately reflect my own understanding or actions before submitting. |
+| 15 | Claude Code | "Fill in `SUBMISSION.md` — including this AI usage log — from what we actually did this session." | Reviewed the drafted score table, documents checklist, and this log against what actually happened; corrected nothing, kept as written. |
+| 16 | Claude Code | "Can you create a repo on my GitHub for this?" | Answered its clarifying questions on visibility and name myself (chose public, and the existing folder name). Reviewed `git status` before the first commit to confirm no `out.jsonl` or credentials were staged, then checked the pushed repo on GitHub. |
+| 17 | Claude Code | "Create an HTML page that explains all the steps of the process, with interactive things people can do on it." | Reviewed the published page against `MEASUREMENTS.md` to confirm every number on it (the score progression, the per-file before/after values, the utility table) matched what was actually measured, not a rounded or invented figure. |
+| 18 | Claude Code | "Host this website with GitHub Pages." | Reviewed that this required wrapping the page into a standalone HTML document first (the interactive-artifact version depends on the Artifacts platform for its `<head>`/reset CSS and isn't a complete file on its own), then confirmed the page loads at the published URL and that the GitHub Pages build status came back "built." |
+| 19 | Claude Code | "Complete the submission files with the website link, and anything else still missing." | Reviewing this document now; checked every section against the current state of the repo before considering it done. |
 
 ---
 
