@@ -1,0 +1,874 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Utility Ledger</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  html { color-scheme: light dark; }
+  body { margin: 0; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+
+  :root {
+    --paper: #f3f4f2;
+    --surface: #ffffff;
+    --surface-2: #eaece7;
+    --ink: #1b1e23;
+    --ink-soft: #565a61;
+    --ink-faint: #8a8d93;
+    --rule: #dcdedd;
+    --rule-strong: #c5c7c8;
+
+    --accent: #24438c;
+    --accent-soft: #e7ecf7;
+
+    --good: #1e8a5f;
+    --good-soft: #e3f1ea;
+    --warn: #a6790a;
+    --warn-soft: #f6ecdc;
+    --bad: #a62348;
+    --bad-soft: #f7e5ec;
+    --spurious: #6b4e9e;
+    --spurious-soft: #ece6f6;
+    --neutral: #75787e;
+    --neutral-soft: #eaebec;
+
+    --font-display: 'Fraunces', ui-serif, Georgia, serif;
+    --font-body: 'Work Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+    --shadow-1: 0 1px 2px rgba(27,30,35,0.06), 0 1px 1px rgba(27,30,35,0.04);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #14161b;
+      --surface: #1b1e24;
+      --surface-2: #20232a;
+      --ink: #ececea;
+      --ink-soft: #a2a6ad;
+      --ink-faint: #7c7f86;
+      --rule: #2a2d34;
+      --rule-strong: #383c44;
+
+      --accent: #93b0f0;
+      --accent-soft: #1c2740;
+
+      --good: #1fa88a;
+      --good-soft: #16302a;
+      --warn: #b8890f;
+      --warn-soft: #332913;
+      --bad: #d1425f;
+      --bad-soft: #382029;
+      --spurious: #9b7fcb;
+      --spurious-soft: #29233e;
+      --neutral: #9a9da5;
+      --neutral-soft: #24262c;
+
+      --shadow-1: 0 1px 2px rgba(0,0,0,0.35), 0 1px 1px rgba(0,0,0,0.3);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #14161b;
+    --surface: #1b1e24;
+    --surface-2: #20232a;
+    --ink: #ececea;
+    --ink-soft: #a2a6ad;
+    --ink-faint: #7c7f86;
+    --rule: #2a2d34;
+    --rule-strong: #383c44;
+
+    --accent: #93b0f0;
+    --accent-soft: #1c2740;
+
+    --good: #1fa88a;
+    --good-soft: #16302a;
+    --warn: #b8890f;
+    --warn-soft: #332913;
+    --bad: #d1425f;
+    --bad-soft: #382029;
+    --spurious: #9b7fcb;
+    --spurious-soft: #29233e;
+    --neutral: #9a9da5;
+    --neutral-soft: #24262c;
+
+    --shadow-1: 0 1px 2px rgba(0,0,0,0.35), 0 1px 1px rgba(0,0,0,0.3);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  main { max-width: 920px; margin: 0 auto; padding: 0 24px 120px; }
+  h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; }
+  p { margin: 0 0 1em; max-width: 62ch; }
+  a { color: var(--accent); }
+  .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  button { font-family: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+
+  /* ---------------- Hero ---------------- */
+  .hero {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 72px 24px 48px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .hero .eyebrow { margin-bottom: 18px; }
+  .hero h1 {
+    font-size: clamp(34px, 5.4vw, 58px);
+    font-weight: 600;
+    line-height: 1.04;
+    letter-spacing: -0.01em;
+  }
+  .hero h1 .from { color: var(--ink-faint); font-weight: 400; font-style: italic; }
+  .hero h1 .arrow { color: var(--ink-faint); font-weight: 300; padding: 0 0.08em; }
+  .hero h1 .to { color: var(--good); }
+  .hero p.lede { font-size: 18px; color: var(--ink-soft); margin-top: 20px; max-width: 58ch; }
+
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    margin-top: 36px;
+  }
+  .stat {
+    background: var(--surface);
+    padding: 16px 18px;
+  }
+  .stat .n { font-family: var(--font-mono); font-size: 26px; font-weight: 600; }
+  .stat .n.good { color: var(--good); }
+  .stat .n.bad { color: var(--bad); }
+  .stat .label { font-size: 12.5px; color: var(--ink-faint); margin-top: 4px; }
+
+  /* ---------------- Sections ---------------- */
+  section { padding: 56px 0; border-bottom: 1px solid var(--rule); }
+  section:last-of-type { border-bottom: none; }
+  .section-head { margin-bottom: 28px; }
+  .section-head h2 { font-size: clamp(24px, 3vw, 32px); font-weight: 600; }
+  .section-head .eyebrow { margin-bottom: 10px; }
+  .section-head p { color: var(--ink-soft); margin-top: 10px; }
+
+  /* ---------------- Rules ledger table ---------------- */
+  .rules-table { border: 1px solid var(--rule); border-radius: 3px; overflow: hidden; }
+  .rule-row {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    gap: 14px;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--rule);
+    background: var(--surface);
+  }
+  .rule-row:last-child { border-bottom: none; }
+  .chip {
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; flex-shrink: 0;
+  }
+  .chip.good { background: var(--good-soft); color: var(--good); }
+  .chip.bad { background: var(--bad-soft); color: var(--bad); }
+  .chip.warn { background: var(--warn-soft); color: var(--warn); }
+  .chip.spurious { background: var(--spurious-soft); color: var(--spurious); }
+  .chip.neutral { background: var(--neutral-soft); color: var(--neutral); }
+  .rule-desc { font-size: 14.5px; }
+  .rule-desc b { font-weight: 600; }
+  .rule-val { font-family: var(--font-mono); font-weight: 600; font-size: 15px; white-space: nowrap; }
+  .rule-val.good { color: var(--good); }
+  .rule-val.bad { color: var(--bad); }
+  .rule-val.warn { color: var(--warn); }
+  .rule-val.neutral { color: var(--neutral); }
+  .rule-val.spurious { color: var(--spurious); }
+
+  .budget-note {
+    margin-top: 18px;
+    font-size: 14px;
+    color: var(--ink-soft);
+    background: var(--surface-2);
+    border-left: 3px solid var(--accent);
+    padding: 12px 16px;
+    border-radius: 0 3px 3px 0;
+  }
+
+  /* ---------------- Calculator ---------------- */
+  .calc {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+  @media (max-width: 720px) { .calc { grid-template-columns: 1fr; } }
+
+  .slider-group { display: flex; flex-direction: column; gap: 16px; }
+  .slider-row { display: grid; grid-template-columns: 128px 1fr 40px; align-items: center; gap: 12px; }
+  .slider-row label { display: flex; align-items: center; gap: 8px; font-size: 13.5px; }
+  .slider-row output { font-family: var(--font-mono); font-weight: 600; text-align: right; font-size: 14px; }
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 4px; border-radius: 2px;
+    background: var(--rule-strong);
+    outline-offset: 4px;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--surface);
+    box-shadow: 0 0 0 1px var(--accent);
+    cursor: pointer;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--accent); border: 2px solid var(--surface);
+    box-shadow: 0 0 0 1px var(--accent); cursor: pointer;
+  }
+
+  .presets { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+  .preset-btn {
+    font-size: 12.5px; padding: 7px 12px; border-radius: 20px;
+    border: 1px solid var(--rule-strong); background: var(--surface);
+    color: var(--ink-soft); cursor: pointer; transition: border-color 120ms, color 120ms;
+  }
+  .preset-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .receipt {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 22px 24px;
+    box-shadow: var(--shadow-1);
+  }
+  .receipt-score { text-align: center; padding-bottom: 18px; border-bottom: 1px dashed var(--rule-strong); margin-bottom: 16px; }
+  .receipt-score .n {
+    font-family: var(--font-display); font-weight: 600; font-size: 44px; line-height: 1;
+  }
+  .receipt-score .n.good { color: var(--good); }
+  .receipt-score .n.bad { color: var(--bad); }
+  .receipt-score .cap { font-size: 12px; color: var(--ink-faint); margin-top: 8px; letter-spacing: 0.04em; text-transform: uppercase; font-family: var(--font-mono); }
+  .receipt-line { display: flex; justify-content: space-between; font-size: 13.5px; padding: 5px 0; color: var(--ink-soft); }
+  .receipt-line .amt { font-family: var(--font-mono); }
+  .receipt-line .amt.good { color: var(--good); }
+  .receipt-line .amt.bad { color: var(--bad); }
+  .receipt-line .amt.warn { color: var(--warn); }
+  .receipt-line .amt.neutral { color: var(--neutral); }
+  .receipt-line .amt.spurious { color: var(--spurious); }
+  .receipt-total { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; padding-top: 10px; margin-top: 8px; border-top: 1px solid var(--rule); }
+  .receipt-total .amt { font-family: var(--font-mono); }
+  .budget-bar { margin-top: 16px; }
+  .budget-bar .track { height: 6px; background: var(--rule); border-radius: 3px; overflow: hidden; display: flex; }
+  .budget-bar .track .within { background: var(--warn); }
+  .budget-bar .track .over { background: var(--bad); }
+  .budget-bar .cap { font-size: 11.5px; color: var(--ink-faint); margin-top: 6px; font-family: var(--font-mono); }
+
+  /* ---------------- Fix log ---------------- */
+  .chart-wrap { margin-bottom: 32px; position: relative; }
+  svg.progress { width: 100%; height: auto; overflow: visible; }
+  .progress .gridline { stroke: var(--rule); stroke-width: 1; }
+  .progress .zeroline { stroke: var(--rule-strong); stroke-width: 1; stroke-dasharray: 3 3; }
+  .progress .line { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linecap: round; }
+  .progress .pt { fill: var(--surface); stroke: var(--accent); stroke-width: 2.5; cursor: pointer; }
+  .progress .pt.active { fill: var(--accent); }
+  .progress .pt-hit { fill: transparent; cursor: pointer; }
+  .progress text { font-family: var(--font-mono); font-size: 11px; fill: var(--ink-faint); }
+  .progress .endlabel { font-family: var(--font-mono); font-size: 13px; font-weight: 600; fill: var(--ink); }
+
+  .tooltip {
+    position: fixed; pointer-events: none; z-index: 40;
+    background: var(--ink); color: var(--paper);
+    font-family: var(--font-mono); font-size: 12px;
+    padding: 7px 10px; border-radius: 4px; max-width: 240px;
+    opacity: 0; transform: translate(-50%, calc(-100% - 10px)); transition: opacity 100ms;
+  }
+  .tooltip.show { opacity: 1; }
+
+  .fixlog-body { display: grid; grid-template-columns: 230px 1fr; gap: 0; border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; }
+  @media (max-width: 720px) { .fixlog-body { grid-template-columns: 1fr; } }
+  .fixlog-nav { background: var(--surface-2); border-right: 1px solid var(--rule); }
+  .fixlog-nav button {
+    display: block; width: 100%; text-align: left; padding: 12px 16px;
+    background: none; border: none; border-bottom: 1px solid var(--rule);
+    cursor: pointer; color: var(--ink-soft); font-size: 13px;
+  }
+  .fixlog-nav button:last-child { border-bottom: none; }
+  .fixlog-nav button .num { font-family: var(--font-mono); color: var(--ink-faint); font-size: 11px; }
+  .fixlog-nav button .ttl { display: block; margin-top: 2px; font-weight: 500; }
+  .fixlog-nav button.active { background: var(--surface); color: var(--ink); box-shadow: inset 3px 0 0 var(--accent); }
+  .fixlog-nav button:hover:not(.active) { background: var(--paper); }
+
+  .fixlog-detail { background: var(--surface); padding: 26px 28px; }
+  .fixlog-detail .head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+  .fixlog-detail h3 { font-size: 20px; font-weight: 600; }
+  .fixlog-detail .score-pill { font-family: var(--font-mono); font-weight: 600; font-size: 14px; padding: 4px 10px; border-radius: 20px; }
+  .fixlog-detail .score-pill.good { background: var(--good-soft); color: var(--good); }
+  .fixlog-detail .score-pill.bad { background: var(--bad-soft); color: var(--bad); }
+  .fixlog-detail .metarow { display: flex; gap: 18px; font-size: 12px; color: var(--ink-faint); font-family: var(--font-mono); margin-bottom: 16px; flex-wrap: wrap; }
+  .fixlog-detail p { font-size: 14.5px; color: var(--ink-soft); max-width: none; }
+  .fixlog-detail p b { color: var(--ink); font-weight: 600; }
+
+  /* ---------------- Audit grid ---------------- */
+  .audit-toolbar { display: flex; justify-content: flex-end; margin-bottom: 14px; }
+  .audit-axis { display: grid; grid-template-columns: 180px 1fr 60px; font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); margin-bottom: 6px; }
+  .audit-axis .ticks { position: relative; height: 14px; }
+  .audit-axis .ticks span { position: absolute; transform: translateX(-50%); }
+  .audit-row { display: grid; grid-template-columns: 180px 1fr 60px; align-items: center; gap: 0; padding: 7px 0; border-bottom: 1px solid var(--rule); }
+  .audit-row:first-of-type { border-top: 1px solid var(--rule); }
+  .audit-file { font-family: var(--font-mono); font-size: 12.5px; }
+  .audit-file .n { color: var(--ink-faint); font-size: 11px; display: block; }
+  .audit-track { position: relative; height: 28px; }
+  .audit-track .baseline-grid { position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: var(--rule); }
+  .audit-track .connector { position: absolute; top: 50%; height: 2px; background: var(--rule-strong); transform: translateY(-50%); }
+  .audit-track .dot { position: absolute; top: 50%; width: 10px; height: 10px; border-radius: 50%; transform: translate(-50%, -50%); border: 2px solid var(--surface); cursor: pointer; }
+  .audit-track .dot.after { background: var(--good); }
+  .audit-final { font-family: var(--font-mono); font-size: 12.5px; font-weight: 600; color: var(--good); text-align: right; }
+
+  .audit-table { display: none; width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+  .audit-table.show { display: table; }
+  .audit-table th, .audit-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--rule); font-family: var(--font-mono); }
+  .audit-table th { color: var(--ink-faint); font-weight: 500; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.04em; }
+
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 18px; font-size: 12px; color: var(--ink-soft); }
+  .legend .item { display: flex; align-items: center; gap: 6px; }
+  .legend .dot { width: 9px; height: 9px; border-radius: 50%; }
+
+  /* ---------------- Checks ---------------- */
+  .checks-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+  .check-card { background: var(--surface); padding: 18px 20px; }
+  .check-card .top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .status-chip { font-family: var(--font-mono); font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .status-chip.pass { background: var(--good-soft); color: var(--good); }
+  .status-chip.fixed { background: var(--warn-soft); color: var(--warn); }
+  .check-card h4 { font-size: 15px; font-weight: 600; margin: 0; }
+  .check-card p { font-size: 13px; color: var(--ink-soft); margin: 0; max-width: none; }
+
+  /* ---------------- Footer ---------------- */
+  footer { padding: 40px 0 0; }
+  footer p { font-size: 13px; color: var(--ink-faint); }
+  footer a { color: var(--ink-soft); }
+</style>
+</head>
+<body>
+
+<main>
+
+  <header class="hero">
+    <div class="eyebrow">Engineering case file &middot; broker fleet ingestion</div>
+    <h1><span class="from">&minus;1.06</span><span class="arrow">&rarr;</span><span class="to">+1.00</span></h1>
+    <p class="lede">MincaAI turns brokers' messy vehicle-fleet spreadsheets into records a quoting system trusts. The service that did this was live, and scored worse than doing nothing at all. This is the ledger of how it got fixed &mdash; and a working copy of the scoring formula to run yourself.</p>
+    <div class="stat-row">
+      <div class="stat"><div class="n good" id="stat-score">+1.0000</div><div class="label">macro utility, final</div></div>
+      <div class="stat"><div class="n">140/140</div><div class="label">records correct</div></div>
+      <div class="stat"><div class="n">15/15</div><div class="label">tests passing</div></div>
+      <div class="stat"><div class="n">~1.3</div><div class="label">LLM calls per file</div></div>
+    </div>
+  </header>
+
+  <section id="rules">
+    <div class="section-head">
+      <div class="eyebrow">01 &middot; how it's graded</div>
+      <h2>The rules of the ledger</h2>
+      <p>Every vehicle record lands in exactly one of six outcomes. A wrong record that nobody flagged costs three times what a correct one earns &mdash; a confidently wrong answer is the expensive kind.</p>
+    </div>
+    <div class="rules-table" id="rules-table"></div>
+    <div class="budget-note">The review queue can absorb <b>20% of a file's records</b> (minimum one). Flag inside that budget and it costs +0.10 &mdash; flag past it and every extra flag costs &minus;0.25, whether the record was right or not. Blanket flagging is not a safe floor.</div>
+  </section>
+
+  <section id="calculator">
+    <div class="section-head">
+      <div class="eyebrow">02 &middot; try it yourself</div>
+      <h2>Run the ledger</h2>
+      <p>This is the same formula <code class="mono">score.py</code> runs, for one file. Move the sliders and watch the mean utility change &mdash; or load one of the four real scenarios below.</p>
+    </div>
+    <div class="calc">
+      <div>
+        <div class="slider-group" id="sliders"></div>
+        <div class="presets" id="presets"></div>
+      </div>
+      <div class="receipt" id="receipt"></div>
+    </div>
+  </section>
+
+  <section id="fixlog">
+    <div class="section-head">
+      <div class="eyebrow">03 &middot; the fix log</div>
+      <h2>Eight entries, one file changed</h2>
+      <p>Every entry follows the same shape: diagnose against the labelled data, change one thing, re-run the scorer, keep it or revert it. Click a point on the line, or an entry in the list.</p>
+    </div>
+    <div class="chart-wrap">
+      <svg class="progress" id="progress-chart" viewBox="0 0 860 200" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Macro utility score across eight fix entries, from minus 1.06 to plus 1.00"></svg>
+    </div>
+    <div class="fixlog-body">
+      <nav class="fixlog-nav" id="fixlog-nav"></nav>
+      <div class="fixlog-detail" id="fixlog-detail"></div>
+    </div>
+  </section>
+
+  <section id="auditgrid">
+    <div class="section-head">
+      <div class="eyebrow">04 &middot; per file</div>
+      <h2>The audit grid</h2>
+      <p>Eleven sample files, each graded independently and averaged evenly &mdash; a large clean file can't hide a small broken one. Every dot on the right shows where a file landed before any fix was applied.</p>
+    </div>
+    <div class="audit-toolbar"><button class="preset-btn" id="toggle-table">View as table</button></div>
+    <div id="audit-chart"></div>
+    <div style="overflow-x:auto;">
+      <table class="audit-table" id="audit-table">
+        <thead><tr><th>File</th><th>Records</th><th>Baseline</th><th>Final</th><th>Cause</th></tr></thead>
+        <tbody id="audit-table-body"></tbody>
+      </table>
+    </div>
+    <div class="legend" id="audit-legend"></div>
+  </section>
+
+  <section id="checks">
+    <div class="section-head">
+      <div class="eyebrow">05 &middot; what the scorer can't see</div>
+      <h2>Four axes, graded separately</h2>
+      <p>The headline number was perfect before any of this &mdash; these checks don't move it. They're what a reviewer checks next.</p>
+    </div>
+    <div class="checks-grid" id="checks-grid"></div>
+  </section>
+
+  <footer>
+    <p>Built while fixing the pipeline, in the same Claude Code session. One file changed: <code class="mono">src/extractor/pipeline.py</code>. Full log in <code class="mono">MEASUREMENTS.md</code> &middot; reasoning in <code class="mono">PRIORITIES.md</code> &middot; <a href="https://github.com/lunistache/mincaai-swe-test" target="_blank" rel="noopener">source on GitHub</a>.</p>
+  </footer>
+
+</main>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var REDUCE_MOTION = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------------------------------------------------------------- */
+  /* Data                                                              */
+  /* ---------------------------------------------------------------- */
+
+  var OUTCOMES = [
+    { key: "correct", cls: "good", icon: "✓", label: "Correct, unflagged", value: 1.00 },
+    { key: "wrong",   cls: "bad",  icon: "✗", label: "Wrong, unflagged", value: -3.00 },
+    { key: "within",  cls: "warn", icon: "⚑", label: "Flagged, within budget", value: 0.10 },
+    { key: "over",    cls: "bad",  icon: "⚑", label: "Flagged, over budget", value: -0.25 },
+    { key: "missed",  cls: "neutral", icon: "–", label: "Never emitted", value: -1.00 },
+    { key: "spurious",cls: "spurious", icon: "✱", label: "Emitted, doesn't exist", value: -0.50 }
+  ];
+
+  var STEPS = [
+    {
+      n: 0, title: "Baseline audit", score: -1.0577, tests: "12/15", calls: "9.6/file", nochange: true,
+      body: "Ran <code class=\"mono\">score.py --per-file</code> cold, before touching anything. <b>&minus;1.0577</b> &mdash; worse than emitting nothing at all (&minus;1.00). 12 of 15 tests passing. 106 LLM calls across 11 files (9.6/file), already past the 8-call ceiling on files with at most 19 rows. The per-file breakdown was the whole plan: <b>4 of 11 files sat at &minus;3.00</b>, the worst possible score &mdash; and none of them were “never emitted.” Every one was emitted confidently, and wrong."
+    },
+    {
+      n: 1, title: "Deterministic use field", score: -0.3304, tests: "12/15", calls: "1.0/file",
+      body: "Two different &minus;3.00 files, two different causes hiding under the same field. One had a <b>blank header cell</b> over the column holding “Particular”/“Carga” &mdash; the data was there, the title wasn't, so nothing ever mapped it. The other coded use as bare numbers (<code class=\"mono\">1</code>, <code class=\"mono\">2</code>, <code class=\"mono\">3</code>) against a legend buried in the file's own metadata. Rewrote <code class=\"mono\">normalise_use</code> as plain Python: no model call at all. That also removed the one LLM call <i>per data row</i> the old code made &mdash; the single biggest reason call counts were over budget."
+    },
+    {
+      n: 2, title: "value_mxn: thousands & a decoy column", score: 0.3969, tests: "13/15", calls: "1.0/file",
+      body: "The remaining two &minus;3.00 files were both wrong on <code class=\"mono\">value_mxn</code>, for different reasons. One column was titled “(miles)” &mdash; Spanish for thousands &mdash; and nothing multiplied by 1000. The other file had <i>two</i> columns containing the word “valor”: “Valor Factura” (invoice price) and “Valor Asegurado” (insured value, the one that matters) &mdash; the mapping grabbed whichever came first. Also parsed European-format numbers (<code class=\"mono\">1.528.000,00</code>) correctly for the first time. <b>Zero files left at &minus;3.00.</b>"
+    },
+    {
+      n: 3, title: "Swapped model &amp; year columns", score: 0.5787, tests: "13/15", calls: "1.0/file",
+      body: "Not on the official backlog &mdash; found by reading the raw file. The header read <code class=\"mono\">Modelo, Año</code>, but every data row underneath had them reversed. Added a detector that samples several rows and only swaps the mapping on a <b>unanimous</b> signal across them, specifically so a motorcycle genuinely modeled “250” can't trigger a false positive on its own."
+    },
+    {
+      n: 4, title: "Multi-section files", score: 0.7605, tests: "15/15", calls: "1.3/file",
+      body: "The last &minus;1.00 file carried two header sections &mdash; a second table further down, in English, with the columns in a different order. Its accent character was <i>already</i> corrupted before the file reached this pipeline, which isn't quite the crash the backlog described, but the same underlying damage. Added a Latin-1/CP1252 read fallback, detection of every header-like row (not just the first), and a fix for a subtler bug found mid-diagnosis: a partial AI mapping was silently shadowing a better keyword-based one. <b>All 15 tests passing for the first time.</b>"
+    },
+    {
+      n: 5, title: "Deduplication", score: 0.7889, tests: "15/15", calls: "1.3/file",
+      body: "A 3-sheet workbook had one sheet that was a verbatim restatement of another &mdash; the same 10 vehicles, just with the plate reformatted (<code class=\"mono\">AAA-002-Z</code> vs <code class=\"mono\">AAA002Z</code>). Added a dedup pass matched on the same alphanumeric-only key the scorer itself uses, so a formatting difference can't slip past it. <b>Zero spurious records left anywhere in the corpus.</b>"
+    },
+    {
+      n: 6, title: "VIN check digit &amp; USD conversion", score: 1.0000, tests: "15/15", calls: "1.3/file",
+      body: "Three hand-retyped VINs were 17 characters and passed the old length check &mdash; but failed the real ISO 3779 check digit at position 9. Implemented the actual algorithm rather than the length shortcut. Separately, one file's own metadata claimed an 18.90 MXN/USD rate; checked the arithmetic on its USD cells against the labels directly and confirmed the brief's 17.5 was correct, documented that decision in code. <b>Every file in the corpus: a perfect +1.00.</b>"
+    },
+    {
+      n: 7, title: "The audit", score: 1.0000, tests: "15/15", calls: "1.3/file", nochange: true,
+      body: "No score to move &mdash; this is what the scorer can't show. A hostile LLM (65% failure: rate limits, timeouts, wrong-but-valid answers) across 5 seeds still scored +1.0000, because the model is used for exactly one thing with a real fallback. Two runs, diffed, identical. A synthetic 40,000-row file needed 1 call for one header section, 5 for five &mdash; scales with sections, not rows. And a real bug: a truncated <code class=\"mono\">.xlsx</code> crashed the API path with no guard. Fixed at the source, plus a measured 5.4&times; memory reduction on Excel parsing."
+    }
+  ];
+
+  var FILES = [
+    { name: "dev_01_clean.csv", n: 12, before: 1.00, cause: "good", note: "Clean from the start." },
+    { name: "dev_02_preamble.xlsx", n: 14, before: -3.00, cause: "bad", note: "Blank header cell over the use column — every row's use came out null." },
+    { name: "dev_03_multisection.csv", n: 19, before: -1.00, cause: "neutral", note: "Second header section (English, different order) was never detected." },
+    { name: "dev_04_usd.xlsx", n: 11, before: -0.0909, cause: "warn", note: "3 cells written “USD 24,000.00” read as pesos at face value." },
+    { name: "dev_05_thousands.csv", n: 12, before: -3.00, cause: "bad", note: "Column labelled “(miles)” read literally — 1000x too small." },
+    { name: "dev_06_duplicates.xlsx", n: 16, before: 0.6875, cause: "spurious", note: "A “consolidated” sheet restated 10 vehicles already counted." },
+    { name: "dev_07_vin_errors.csv", n: 13, before: -0.2308, cause: "warn", note: "3 hand-retyped VINs passed length but failed the ISO 3779 check digit." },
+    { name: "dev_08_motos.xlsx", n: 11, before: 1.00, cause: "good", note: "Clean from the start." },
+    { name: "dev_09_swapped.csv", n: 9, before: -1.00, cause: "neutral", note: "Header said Modelo, Año; every data row had them reversed." },
+    { name: "dev_10_accounting.csv", n: 12, before: -3.00, cause: "bad", note: "Decoy “Valor Factura” column stole the mapping meant for insured value." },
+    { name: "dev_11_use_codes.csv", n: 11, before: -3.00, cause: "bad", note: "Use coded 1/2/3 against an in-file legend nothing read." }
+  ];
+
+  var CAUSE_LABEL = { good: "already correct", bad: "confidently wrong", neutral: "never emitted", warn: "partially wrong", spurious: "spurious duplicates" };
+
+  var CHECKS = [
+    { status: "pass", title: "Determinism", body: "Ran the corpus twice, sorted and diffed both outputs. Identical." },
+    { status: "pass", title: "Resilience", body: "A 65%-failure LLM client across 5 seeds, plus a client that always fails: +1.0000 every time." },
+    { status: "pass", title: "Throughput at scale", body: "Synthetic 40,000-row file: calls scale with header sections (1, or 5), never with rows." },
+    { status: "fixed", title: "Robustness", body: "A truncated .xlsx crashed the API path with no guard. Found and fixed at the source." },
+    { status: "fixed", title: "Memory (B9)", body: "Measured, not guessed: a 2.5MB CSV peaked at 73MB. Openpyxl read_only cut Excel parsing 5.4×." }
+  ];
+
+  /* ---------------------------------------------------------------- */
+  /* Rules table                                                       */
+  /* ---------------------------------------------------------------- */
+
+  (function renderRules() {
+    var descs = {
+      correct: "Every field matches, and it wasn't flagged.",
+      wrong: "Emitted with confidence &mdash; any field wrong.",
+      within: "Flagged inside the 20% review budget.",
+      over: "Flagged, but the queue was already full.",
+      missed: "In the answer key. Never emitted.",
+      spurious: "Emitted. Doesn't exist in the answer key."
+    };
+    var html = OUTCOMES.map(function (o) {
+      var sign = o.value > 0 ? "+" : "";
+      return '<div class="rule-row">' +
+        '<span class="chip ' + o.cls + '">' + o.icon + '</span>' +
+        '<span class="rule-desc"><b>' + o.label + '</b><br>' + descs[o.key] + '</span>' +
+        '<span class="rule-val ' + o.cls + '">' + sign + o.value.toFixed(2) + '</span>' +
+        '</div>';
+    }).join("");
+    document.getElementById("rules-table").innerHTML = html;
+  })();
+
+  /* ---------------------------------------------------------------- */
+  /* Calculator                                                         */
+  /* ---------------------------------------------------------------- */
+
+  var calcState = { correct: 5, wrong: 1, flagged: 3, missed: 1, spurious: 1 };
+
+  function computeUtility(s) {
+    var truth = s.correct + s.wrong + s.flagged + s.missed;
+    if (truth <= 0) return { mean: 0, budget: 0, within: 0, over: 0, truth: 0 };
+    var budget = Math.max(1, Math.floor(truth * 0.2));
+    var within = Math.min(s.flagged, budget);
+    var over = s.flagged - within;
+    var total = s.correct * 1.00 + s.wrong * -3.00 + within * 0.10 + over * -0.25 + s.missed * -1.00 + s.spurious * -0.50;
+    return { mean: total / truth, budget: budget, within: within, over: over, truth: truth, total: total };
+  }
+
+  var SLIDER_DEFS = [
+    { key: "correct", label: "Correct", icon: "✓", cls: "good", max: 20 },
+    { key: "wrong", label: "Wrong", icon: "✗", cls: "bad", max: 20 },
+    { key: "flagged", label: "Flagged", icon: "⚑", cls: "warn", max: 20 },
+    { key: "missed", label: "Missed", icon: "–", cls: "neutral", max: 20 },
+    { key: "spurious", label: "Spurious", icon: "✱", cls: "spurious", max: 20 }
+  ];
+
+  function renderSliders() {
+    var html = SLIDER_DEFS.map(function (d) {
+      return '<div class="slider-row">' +
+        '<label><span class="chip ' + d.cls + '" style="width:18px;height:18px;font-size:10px;">' + d.icon + '</span>' + d.label + '</label>' +
+        '<input type="range" min="0" max="' + d.max + '" value="' + calcState[d.key] + '" data-key="' + d.key + '" aria-label="' + d.label + ' record count">' +
+        '<output data-out="' + d.key + '">' + calcState[d.key] + '</output>' +
+        '</div>';
+    }).join("");
+    document.getElementById("sliders").innerHTML = html;
+    Array.prototype.forEach.call(document.querySelectorAll('#sliders input[type="range"]'), function (el) {
+      el.addEventListener("input", function () {
+        calcState[el.dataset.key] = parseInt(el.value, 10);
+        document.querySelector('[data-out="' + el.dataset.key + '"]').textContent = el.value;
+        renderReceipt();
+      });
+    });
+  }
+
+  function renderReceipt() {
+    var r = computeUtility(calcState);
+    var sign = r.mean >= 0 ? "+" : "";
+    var lines = [
+      { label: "correct × " + calcState.correct, value: calcState.correct * 1.00, cls: "good" },
+      { label: "wrong × " + calcState.wrong, value: calcState.wrong * -3.00, cls: "bad" },
+      { label: "flagged, within budget × " + r.within, value: r.within * 0.10, cls: "warn" },
+      { label: "flagged, over budget × " + r.over, value: r.over * -0.25, cls: "bad" },
+      { label: "missed × " + calcState.missed, value: calcState.missed * -1.00, cls: "neutral" },
+      { label: "spurious × " + calcState.spurious, value: calcState.spurious * -0.50, cls: "spurious" }
+    ];
+    var linesHtml = lines.filter(function (l) { return l.value !== 0; }).map(function (l) {
+      var s = l.value >= 0 ? "+" : "";
+      return '<div class="receipt-line"><span>' + l.label + '</span><span class="amt ' + l.cls + '">' + s + l.value.toFixed(2) + '</span></div>';
+    }).join("");
+
+    var pct = r.truth ? Math.round((r.budget / r.truth) * 1000) / 10 : 0;
+    var withinPct = r.truth ? (r.within / r.truth) * 100 : 0;
+    var overPct = r.truth ? (r.over / r.truth) * 100 : 0;
+
+    document.getElementById("receipt").innerHTML =
+      '<div class="receipt-score">' +
+        '<div class="n ' + (r.mean >= 0 ? "good" : "bad") + '">' + sign + r.mean.toFixed(4) + '</div>' +
+        '<div class="cap">mean utility &middot; ' + r.truth + ' truth record' + (r.truth === 1 ? '' : 's') + '</div>' +
+      '</div>' +
+      linesHtml +
+      '<div class="receipt-total"><span>Total ÷ ' + r.truth + '</span><span class="amt">' + (r.total >= 0 ? "+" : "") + (r.total || 0).toFixed(2) + '</span></div>' +
+      '<div class="budget-bar">' +
+        '<div class="track"><div class="within" style="width:' + withinPct + '%"></div><div class="over" style="width:' + overPct + '%"></div></div>' +
+        '<div class="cap">review budget: ' + r.budget + ' of ' + r.truth + ' records (20%, min 1)</div>' +
+      '</div>';
+  }
+
+  var PRESETS = [
+    { label: "dev_10 — baseline", state: { correct: 0, wrong: 12, flagged: 0, missed: 0, spurious: 0 } },
+    { label: "dev_10 — after fix", state: { correct: 12, wrong: 0, flagged: 0, missed: 0, spurious: 0 } },
+    { label: "emit nothing", state: { correct: 0, wrong: 0, flagged: 0, missed: 12, spurious: 0 } },
+    { label: "flag everything", state: { correct: 0, wrong: 0, flagged: 12, missed: 0, spurious: 0 } }
+  ];
+
+  function renderPresets() {
+    var html = PRESETS.map(function (p, i) {
+      return '<button class="preset-btn" data-preset="' + i + '">' + p.label + '</button>';
+    }).join("");
+    document.getElementById("presets").innerHTML = html;
+    Array.prototype.forEach.call(document.querySelectorAll("[data-preset]"), function (btn) {
+      btn.addEventListener("click", function () {
+        var p = PRESETS[parseInt(btn.dataset.preset, 10)];
+        calcState = Object.assign({}, p.state);
+        renderSliders();
+        renderReceipt();
+      });
+    });
+  }
+
+  renderSliders();
+  renderPresets();
+  renderReceipt();
+
+  /* ---------------------------------------------------------------- */
+  /* Fix log: chart + nav + detail                                     */
+  /* ---------------------------------------------------------------- */
+
+  var activeStep = 6;
+  var tooltip = document.getElementById("tooltip");
+
+  function showTooltip(x, y, html) {
+    tooltip.innerHTML = html;
+    tooltip.style.left = x + "px";
+    tooltip.style.top = y + "px";
+    tooltip.classList.add("show");
+  }
+  function hideTooltip() { tooltip.classList.remove("show"); }
+
+  function renderProgressChart() {
+    var W = 860, H = 200, padL = 36, padR = 36, padT = 20, padB = 28;
+    var innerW = W - padL - padR, innerH = H - padT - padB;
+    var minY = -1.4, maxY = 1.2;
+    function xFor(i) { return padL + (i / (STEPS.length - 1)) * innerW; }
+    function yFor(v) { return padT + innerH - ((v - minY) / (maxY - minY)) * innerH; }
+
+    var svg = document.getElementById("progress-chart");
+    var parts = [];
+
+    [ -1, 0, 1 ].forEach(function (v) {
+      parts.push('<line class="' + (v === 0 ? 'zeroline' : 'gridline') + '" x1="' + padL + '" x2="' + (W - padR) + '" y1="' + yFor(v) + '" y2="' + yFor(v) + '"></line>');
+      parts.push('<text x="' + (padL - 10) + '" y="' + (yFor(v) + 4) + '" text-anchor="end">' + (v > 0 ? "+" : "") + v.toFixed(0) + '.00</text>');
+    });
+
+    var d = STEPS.map(function (s, i) { return (i === 0 ? "M" : "L") + xFor(i) + " " + yFor(s.score); }).join(" ");
+    parts.push('<path class="line" d="' + d + '"></path>');
+
+    STEPS.forEach(function (s, i) {
+      var active = i === activeStep;
+      parts.push('<circle class="pt' + (active ? ' active' : '') + '" cx="' + xFor(i) + '" cy="' + yFor(s.score) + '" r="' + (active ? 6 : 4.5) + '"></circle>');
+      parts.push('<circle class="pt-hit" data-i="' + i + '" cx="' + xFor(i) + '" cy="' + yFor(s.score) + '" r="16"></circle>');
+    });
+
+    var first = STEPS[0], last = STEPS[STEPS.length - 1];
+    parts.push('<text class="endlabel" x="' + xFor(0) + '" y="' + (yFor(first.score) + 22) + '" text-anchor="start">' + first.score.toFixed(2) + '</text>');
+    parts.push('<text class="endlabel" x="' + xFor(STEPS.length - 1) + '" y="' + (yFor(last.score) - 14) + '" text-anchor="end">+' + last.score.toFixed(2) + '</text>');
+
+    svg.innerHTML = parts.join("");
+
+    Array.prototype.forEach.call(svg.querySelectorAll(".pt-hit"), function (hit) {
+      var i = parseInt(hit.dataset.i, 10);
+      hit.addEventListener("mouseenter", function (ev) {
+        var s = STEPS[i];
+        showTooltip(ev.clientX, ev.clientY, "<b>" + i + " &middot; " + s.title + "</b><br>" + (s.score >= 0 ? "+" : "") + s.score.toFixed(4));
+      });
+      hit.addEventListener("mousemove", function (ev) { tooltip.style.left = ev.clientX + "px"; tooltip.style.top = ev.clientY + "px"; });
+      hit.addEventListener("mouseleave", hideTooltip);
+      hit.addEventListener("click", function () { selectStep(i); });
+      hit.addEventListener("focus", function () { selectStep(i); });
+      hit.setAttribute("tabindex", "0");
+      hit.setAttribute("role", "button");
+    });
+
+    if (!REDUCE_MOTION && !chartDrawn) {
+      chartDrawn = true;
+      var path = svg.querySelector(".line");
+      var len = path.getTotalLength();
+      path.style.strokeDasharray = len;
+      path.style.strokeDashoffset = len;
+      path.getBoundingClientRect();
+      path.style.transition = "stroke-dashoffset 900ms ease";
+      requestAnimationFrame(function () { path.style.strokeDashoffset = "0"; });
+    }
+  }
+  var chartDrawn = false;
+
+  function renderFixlogNav() {
+    var html = STEPS.map(function (s, i) {
+      return '<button data-i="' + i + '" class="' + (i === activeStep ? "active" : "") + '"><span class="num">Entry ' + i + '</span><span class="ttl">' + s.title + '</span></button>';
+    }).join("");
+    document.getElementById("fixlog-nav").innerHTML = html;
+    Array.prototype.forEach.call(document.querySelectorAll("#fixlog-nav button"), function (btn) {
+      btn.addEventListener("click", function () { selectStep(parseInt(btn.dataset.i, 10)); });
+    });
+  }
+
+  function renderFixlogDetail() {
+    var s = STEPS[activeStep];
+    var sign = s.score >= 0 ? "+" : "";
+    document.getElementById("fixlog-detail").innerHTML =
+      '<div class="head"><h3>' + s.title + '</h3><span class="score-pill ' + (s.score >= 0 ? "good" : "bad") + '">' + sign + s.score.toFixed(4) + '</span></div>' +
+      '<div class="metarow"><span>tests ' + s.tests + '</span><span>llm calls ' + s.calls + '</span>' + (s.nochange ? '<span>no score change</span>' : '') + '</div>' +
+      '<p>' + s.body + '</p>';
+  }
+
+  function selectStep(i) {
+    activeStep = i;
+    renderProgressChartActiveOnly();
+    renderFixlogNav();
+    renderFixlogDetail();
+  }
+
+  function renderProgressChartActiveOnly() {
+    var svg = document.getElementById("progress-chart");
+    Array.prototype.forEach.call(svg.querySelectorAll(".pt"), function (c, i) {
+      c.classList.toggle("active", i === activeStep);
+      c.setAttribute("r", i === activeStep ? 6 : 4.5);
+    });
+  }
+
+  renderProgressChart();
+  renderFixlogNav();
+  renderFixlogDetail();
+
+  /* ---------------------------------------------------------------- */
+  /* Audit grid                                                         */
+  /* ---------------------------------------------------------------- */
+
+  function pct(v) {
+    var min = -3.2, max = 1.2;
+    return ((v - min) / (max - min)) * 100;
+  }
+
+  function renderAuditChart() {
+    var ticks = [-3, -1, 0, 1];
+    var axisHtml = '<div class="audit-axis"><div></div><div class="ticks">' +
+      ticks.map(function (t) { return '<span style="left:' + pct(t) + '%">' + (t > 0 ? "+" : "") + t.toFixed(2) + '</span>'; }).join("") +
+      '</div><div></div></div>';
+
+    var rows = FILES.map(function (f) {
+      var beforeX = pct(f.before), afterX = pct(1.00);
+      var left = Math.min(beforeX, afterX), width = Math.abs(afterX - beforeX);
+      return '<div class="audit-row">' +
+        '<div class="audit-file">' + f.name + '<span class="n">' + f.n + ' records</span></div>' +
+        '<div class="audit-track" data-file="' + f.name + '">' +
+          '<div class="baseline-grid"></div>' +
+          '<div class="connector" style="left:' + left + '%;width:' + width + '%"></div>' +
+          '<div class="dot before" data-tip="' + f.name + '" style="left:' + beforeX + '%;background:var(--' + (f.cause === 'good' ? 'good' : f.cause) + ')"></div>' +
+          '<div class="dot after" style="left:' + afterX + '%"></div>' +
+        '</div>' +
+        '<div class="audit-final">+1.00</div>' +
+      '</div>';
+    }).join("");
+
+    document.getElementById("audit-chart").innerHTML = axisHtml + rows;
+
+    Array.prototype.forEach.call(document.querySelectorAll(".audit-track .dot.before"), function (dot) {
+      var f = FILES.filter(function (x) { return x.name === dot.dataset.tip; })[0];
+      dot.addEventListener("mouseenter", function (ev) {
+        var sign = f.before >= 0 ? "+" : "";
+        showTooltip(ev.clientX, ev.clientY, "<b>" + f.name + "</b><br>baseline " + sign + f.before.toFixed(4) + "<br>" + f.note);
+      });
+      dot.addEventListener("mousemove", function (ev) { tooltip.style.left = ev.clientX + "px"; tooltip.style.top = ev.clientY + "px"; });
+      dot.addEventListener("mouseleave", hideTooltip);
+    });
+  }
+
+  function renderAuditTable() {
+    var html = FILES.map(function (f) {
+      var sign = f.before >= 0 ? "+" : "";
+      return '<tr><td>' + f.name + '</td><td>' + f.n + '</td><td>' + sign + f.before.toFixed(4) + '</td><td>+1.0000</td><td>' + CAUSE_LABEL[f.cause] + '</td></tr>';
+    }).join("");
+    document.getElementById("audit-table-body").innerHTML = html;
+  }
+
+  function renderAuditLegend() {
+    var cats = ["bad", "neutral", "warn", "spurious", "good"];
+    document.getElementById("audit-legend").innerHTML = cats.map(function (c) {
+      return '<span class="item"><span class="dot" style="background:var(--' + c + ')"></span>' + CAUSE_LABEL[c] + ' at baseline</span>';
+    }).join("") + '<span class="item"><span class="dot" style="background:var(--good)"></span>final, every file</span>';
+  }
+
+  renderAuditChart();
+  renderAuditTable();
+  renderAuditLegend();
+
+  document.getElementById("toggle-table").addEventListener("click", function () {
+    var table = document.getElementById("audit-table");
+    var chart = document.getElementById("audit-chart");
+    var showing = table.classList.toggle("show");
+    chart.style.display = showing ? "none" : "";
+    this.textContent = showing ? "View as chart" : "View as table";
+  });
+
+  /* ---------------------------------------------------------------- */
+  /* Checks                                                             */
+  /* ---------------------------------------------------------------- */
+
+  document.getElementById("checks-grid").innerHTML = CHECKS.map(function (c) {
+    return '<div class="check-card"><div class="top"><span class="status-chip ' + c.status + '">' + (c.status === "pass" ? "Pass" : "Found &amp; fixed") + '</span></div><h4>' + c.title + '</h4><p>' + c.body + '</p></div>';
+  }).join("");
+
+  /* ---------------------------------------------------------------- */
+  /* Hero count-up                                                     */
+  /* ---------------------------------------------------------------- */
+
+  if (!REDUCE_MOTION) {
+    var el = document.getElementById("stat-score");
+    var start = -1.0577, end = 1.0000, dur = 1100, t0 = null;
+    function tick(ts) {
+      if (!t0) t0 = ts;
+      var p = Math.min(1, (ts - t0) / dur);
+      var eased = 1 - Math.pow(1 - p, 3);
+      var v = start + (end - start) * eased;
+      el.textContent = (v >= 0 ? "+" : "") + v.toFixed(4);
+      el.className = "n " + (v >= 0 ? "good" : "bad");
+      if (p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  window.addEventListener("resize", function () {
+    renderProgressChart();
+    renderProgressChartActiveOnly();
+  });
+})();
+</script>
+
+</body>
+</html>
