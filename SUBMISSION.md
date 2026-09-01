@@ -8,11 +8,11 @@
 
 **Repo / archive:**
 
-https://github.com/lunistache/mincaai-swe-test
+https://github.com/lunistache/mincaai-swe-test (private — access must be granted to `john.fofe@mincaai.com`, see note below)
 
 **Live interactive write-up (optional, not a required deliverable):**
 
-https://lunistache.github.io/mincaai-swe-test/ — a companion page (source in `docs/index.html`, hosted via GitHub Pages) walking through the utility table, the fix log with before/after numbers per change, and a working copy of the scoring formula to try directly. Everything on it is pulled from `MEASUREMENTS.md`; it adds nothing not already in the required documents.
+Source in `docs/index.html`, the same content as `MEASUREMENTS.md` walked through interactively with a working copy of the scoring formula to try directly. Was hosted at `lunistache.github.io/mincaai-swe-test`, but GitHub Pages does not serve from a private repository on a free plan — the page went offline the moment the repo was made private, so there is no live link right now. Open `docs/index.html` directly in a browser to view it instead.
 
 **One command a reviewer can copy-paste to reproduce your score:**
 
